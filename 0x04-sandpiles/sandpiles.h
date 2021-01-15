@@ -1,4 +1,4 @@
-#ifndef _SANPILES_H
+#ifndef _SANDPILES_H
 #define _SANDPILES_H
 
 #include <stdio.h>
