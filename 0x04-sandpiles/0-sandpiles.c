@@ -1,141 +1,103 @@
 #include "sandpiles.h"
-#include <stdio.h>
-#define SIZE 3
-#define DETECT_TOPPLING(x) ((x) > 3)
-#define IS_VALID(x) ((x) >= 0 &&  (x) <= 2)
-/**
- * print_grid - prints the grid
- * @grid: sanpile to print
- *
- * Return: None
- */
-static void print_grid(int grid[3][3])
-{
-	int i, j;
 
-	for (i = 0; i < 3; i++)
-	{
-		for (j = 0; j < 3; j++)
-		{
-			if (j)
-				printf(" ");
-			printf("%d", grid[i][j]);
-		}
-		printf("\n");
-	}
-}
+#define FALSE  0
+#define TRUE   1
 
 /**
- * initial_sum - sums two sandpiles
- * @grid1: first sandpile to sum
- * @grid2: second sandpile to sum
- *
- * Return: None
- */
-static void initial_sum(int grid1[3][3], int grid2[3][3])
-{
-	int row = 0, col = 0;
-
-	for (row = 0; row < SIZE; row++)
-	{
-		for (col = 0; col < SIZE; col++)
-		{
-			grid1[row][col] = grid1[row][col] + grid2[row][col];
-		}
-	}
-}
-
-/**
- * scan_toppling - scans if the sandpile has more than 3 grains
- * @grid1: sandpile to analyze
- * @flags: position of sandpiles to analyze
- *
- * Return: 1 if sandpile has topling, 0 else
- */
-static int scan_toppling(int grid1[3][3], int flags[3][3])
-{
-	int row = 0, col = 0, activated = 0;
-
-	for (row = 0; row < SIZE; row++)
-	{
-		for (col = 0; col < SIZE; col++)
-		{
-			if (DETECT_TOPPLING(grid1[row][col]))
-			{
-				flags[row][col] = 1;
-				activated = 1;
-			}
-		}
-	}
-	if (activated)
-		return (1);
-	return (0);
-}
-
-/**
- * do_toppling - scans if the sandpile has m
- * @grid1: sandpile to analyze
- * @flags: position of sandpiles to analyze
- *
- * Return: 1 if sandpile has topling, 0 else
- */
-static int do_toppling(int grid1[3][3], int flags[3][3])
-{
-	int row = 0, col = 0, i = 0, newcol = 0, newrow = 0;
-	int translate[] = {1, -1, 0, 0};
-
-	for (row = 0; row < SIZE; row++)
-	{
-		for (col = 0; col < SIZE; col++)
-		{
-			if (DETECT_TOPPLING(grid1[row][col]) && flags[row][col])
-			{
-				grid1[row][col] = grid1[row][col] - 4;
-				for (i = 0; i < 4; i++)
-				{
-					newrow = row + translate[i];
-					newcol = col + translate[3 - i];
-					if (IS_VALID(newrow) && IS_VALID(newcol))
-						grid1[newrow][newcol]++;
-				}
-			}
-		}
-	}
-	return (0);
-}
-
-/**
- * sandpiles_sum - finds the sum of two sandpiles
- * @grid1: first sandpile to sum
- * @grid2: second sandpile to sum
- *
- * Return: None
+ * sandpiles_sum - Add grid2 to grid1 and make sure is a stable sandpile
+ * @grid1: First sandpile
+ * @grid2: Second sandpile
+ * Return: Nothing
  */
 void sandpiles_sum(int grid1[3][3], int grid2[3][3])
 {
-	int flags[3][3];
 	int row = 0, col = 0;
 
-	initial_sum(grid1, grid2);
-
-	for (row = 0; row < SIZE; row++)
-	{
-		for (col = 0; col < SIZE; col++)
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
 		{
-			flags[row][col] = 0;
+			grid1[row][col] = grid1[row][col] + grid2[row][col];
 		}
-	}
-	while (scan_toppling(grid1, flags))
+	while (validate_sandpile(grid1) != TRUE)
 	{
 		printf("=\n");
-		print_grid(grid1);
-		do_toppling(grid1, flags);
-		for (row = 0; row < SIZE; row++)
+		print_my_grid(grid1);
+		do_toppling(grid1);
+	}
+}
+
+/**
+ * validate_sandpile - Check if the sandpile is stable or no
+ * @grid1: Sandpile
+ *
+ * Return: FALSE if is not stable, TRUE if is stable
+ */
+int validate_sandpile(int grid1[3][3])
+{
+	int row = 0, col = 0;
+
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+			if (grid1[row][col] > 3)
+				return (FALSE);
+	return (TRUE);
+}
+
+/**
+ * do_toppling - Do the toppling to the sandpile
+ * @grid1: sandpile to do the toppling
+ *
+ * Return: Nothing
+ */
+void do_toppling(int grid1[3][3])
+{
+	int row = 0, col = 0;
+	int flags[3][3];
+
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+			flags[row][col] = 0;
+
+	for (row = 0; row < 3; row++)
+	{
+		for (col = 0; col < 3; col++)
 		{
-			for (col = 0; col < SIZE; col++)
+			if (grid1[row][col] > 3)
 			{
-				flags[row][col] = 0;
+				grid1[row][col] = grid1[row][col] - 4;
+				if ((col - 1 >= 0) && (col - 1 < 3)) /* cell up */
+					flags[row][col - 1]++;
+				if ((row + 1 >= 0) && (row + 1 < 3)) /* cell right */
+					flags[row + 1][col]++;
+				if ((col + 1 >= 0) && (col + 1 < 3)) /* cell down */
+					flags[row][col + 1]++;
+				if ((row - 1 >= 0) && (row - 1 < 3)) /* cell left */
+					flags[row - 1][col]++;
 			}
 		}
+	}
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+			grid1[row][col] += flags[row][col];
+}
+
+/**
+ * print_my_grid - Print 3x3 grid
+ * @grid: The grid
+ * Return: Nothing
+ */
+void print_my_grid(int grid[3][3])
+{
+	int row = 0, col = 0;
+
+	for (row = 0; row < 3; row++)
+	{
+		for (col = 0; col < 3; col++)
+		{
+			if (col)
+				printf(" ");
+			printf("%d", grid[row][col]);
+		}
+		printf("\n");
 	}
 }
