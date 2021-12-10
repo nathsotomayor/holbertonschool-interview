@@ -1,7 +1,12 @@
 #!/usr/bin/python3
+"""
+Module of canUnlockAll
+"""
 
 
 def canUnlockAll(boxes):
+    """ Determine if the boxes can unlock
+    """
     if (type(boxes) is not list):
         return False
 
