@@ -1,55 +1,41 @@
 #!/usr/bin/python3
-""" Class LogParsing """
-import re
+""" Script that reads stdin line by line and computes metrics."""
+
 import sys
 
+dlist = {"size": 0,
+         "lines": 1}
 
-def print_log_parsing(CODES, file_size):
-    """
-    function that print parsing logs
-    args:
-        codes: is a dictionary of status code
-        file_size: is the size of status
-    """
-    print("File size: {}".format(file_size))
-    for key, value in sorted(CODES.items()):
-        print("{}: {}".format(key, value))
+errors = {"200": 0, "301": 0, "400": 0, "401": 0,
+          "403": 0, "404": 0, "405": 0, "500": 0}
 
 
-def run():
-    """"
-    function that search the status code and size number
-    """
-    PATTERN = '([\\d]{3})\\s([\\d]{1,4})$'
-    CODES = {}
-    STOP = 10
-    step = 1
-    size = 0
+def printf():
+    """ Print codes and numbers"""
+    print("File size: {}".format(dlist["size"]))
+    for key in sorted(errors.keys()):
+        if errors[key] != 0:
+            print("{}: {}".format(key, errors[key]))
 
-    while True:
 
-        try:
-            line = input()
+def datasize(data):
+    """ Count file codes and size"""
+    dlist["size"] += int(data[-1])
+    if data[-2] in errors:
+        errors[data[-2]] += 1
 
-            status, file_size = re.search(PATTERN, line).group().split()
 
-            size += int(file_size)
-
+if __name__ == "__main__":
+    try:
+        for line in sys.stdin:
             try:
-                if CODES[status]:
-                    CODES[status] += 1
-            except KeyError:
-                CODES[status] = 1
-
-            if step == STOP:
-                print_log_parsing(CODES, size)
-                step = 1
-
-            step += 1
-        except (KeyboardInterrupt, EOFError):
-            print_log_parsing(CODES, size)
-            exit()
-
-
-if __name__ == '__main__':
-    run()
+                datasize(line.split(" "))
+            except:
+                pass
+            if dlist["lines"] % 10 == 0:
+                printf()
+            dlist["lines"] += 1
+    except KeyboardInterrupt:
+        printf()
+        raise
+    printf()
