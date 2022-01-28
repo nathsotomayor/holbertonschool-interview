@@ -1,41 +1,42 @@
 #!/usr/bin/python3
-""" Script that reads stdin line by line and computes metrics."""
+"""
+Script that reads stdin line by line and computes metrics.
+"""
 
 import sys
 
-dlist = {"size": 0,
-         "lines": 1}
 
-errors = {"200": 0, "301": 0, "400": 0, "401": 0,
-          "403": 0, "404": 0, "405": 0, "500": 0}
+def parser(log, counter, file_size, status):
+    try:
+        if log[-1].isdigit():
+            file_size[0] += int(log[-1])
+        if log[-2].isdigit():
+            status[int(log[-2])] += 1
+        if counter[0] == 9:
+            _print(file_size, status)
+            counter[0] = 0
+        else:
+            counter[0] += 1
+    except Exception:
+        pass
 
 
-def printf():
-    """ Print codes and numbers"""
-    print("File size: {}".format(dlist["size"]))
-    for key in sorted(errors.keys()):
-        if errors[key] != 0:
-            print("{}: {}".format(key, errors[key]))
-
-
-def datasize(data):
-    """ Count file codes and size"""
-    dlist["size"] += int(data[-1])
-    if data[-2] in errors:
-        errors[data[-2]] += 1
+def _print(file_size, status):
+    print("File size: {}".format(file_size[0]))
+    for stat in sorted(status.keys()):
+        if status[stat] != 0:
+            print("{}: {}".format(stat, status[stat]))
 
 
 if __name__ == "__main__":
-    try:
-        for line in sys.stdin:
-            try:
-                datasize(line.split(" "))
-            except:
-                pass
-            if dlist["lines"] % 10 == 0:
-                printf()
-            dlist["lines"] += 1
-    except KeyboardInterrupt:
-        printf()
-        raise
-    printf()
+    file_size = [0]
+    counter = [0]
+    status = {200: 0, 301: 0, 400: 0, 401: 0, 403: 0, 404: 0, 405: 0, 500: 0}
+
+    while True:
+        try:
+            log = input().split()
+            parser(log, counter, file_size, status)
+        except (KeyboardInterrupt, EOFError):
+            _print(file_size, status)
+            exit()
